@@ -20,7 +20,7 @@
     "run:publish": "npm run run:publish:npm && npm run run:publish:jsr"
   },
   "dependencies": {
-    "@tioniq/disposiq": "^1.0.20",
+    "@tioniq/disposiq": "^1.1.0",
     "@tioniq/eventiq": "^1.1.6"
   },
   "devDependencies": {
@@ -32,6 +32,18 @@
     "ts-jest": "^29.2.5",
     "tsup": "^8.3.5",
     "typescript": "^5.2.2"
+  },
+  "author": {
+    "email": "timoniann@gmail.com",
+    "name": "Tim"
+  },
+  "homepage": "https://github.com/tioniq/json-rpc/blob/main/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tioniq/json-rpc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tioniq/json-rpc/issues"
   },
   "keywords": ["json-rpc", "json-rpc-2.0", "json-rpc-duplex", "rpc"],
   "contributors": ["Tim (https://github.com/Timoniann)"]
