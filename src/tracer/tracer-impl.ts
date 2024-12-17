@@ -7,7 +7,6 @@ import type {
   OutcomeResponseEvent,
   Tracer,
 } from "./tracer.ts"
-import { isPromise } from "node:util/types"
 import type { TimeProvider } from "../time/time-provider.ts"
 
 export class TracerImpl implements Tracer {
@@ -65,7 +64,7 @@ class EventTracerImpl<T> implements EventTracer<T> {
       this._onEnd.dispatch(eventData)
       throw e
     }
-    if (!isPromise(result)) {
+    if (!(result instanceof Promise)) {
       eventData.endTime = this._timeProvider()
       eventData.result = result
       this._onEnd.dispatch(eventData)
