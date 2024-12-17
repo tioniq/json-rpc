@@ -16,6 +16,7 @@ import { noopLogger } from "./logger/noop-logger.ts"
 import {
   handlePromiseOrValueFunction,
   type PromiseOrValue,
+  runPromiseOrValue,
 } from "./utils/async.ts"
 import type { Tracer } from "./tracer/tracer.ts"
 import type { TimeProvider } from "./time/time-provider.ts"
@@ -429,26 +430,26 @@ export class Peer implements IDisposable {
   sendResponse(response: rpc.Response): void {
     this._disposables.throwIfDisposed()
     this._checkConnection()
-    this._tracer.outcomeResponse.start(
-      {
-        peer: this,
-        response: response,
-      },
+    handlePromiseOrValueFunction(
       () =>
-        handlePromiseOrValueFunction(
+        this._tracer.outcomeResponse.start(
+          {
+            peer: this,
+            response: response,
+          },
           () =>
             this._sendMessage({
               id: response.id,
               result: response.result,
             }),
-          noop,
-          (e) => {
-            this._logger.error("Failed to send response", {
-              response,
-              error: e,
-            })
-          },
         ),
+      noop,
+      (e) => {
+        this._logger.error("Failed to send response", {
+          response,
+          error: e,
+        })
+      },
     )
   }
 
@@ -483,37 +484,53 @@ export class Peer implements IDisposable {
       method: string,
     ) => {
       handlePromiseOrValueFunction(
-        () => handler(request, requestId, method),
-        (response) => {
-          if (response === undefined) {
-            return
-          }
-          this.sendResponse({
-            id: requestId,
-            result: response,
-          })
-        },
-        (e) => {
-          let error: rpc.Error
-          if (isRpcError(e)) {
-            error = {
-              code: e.code,
-              message: e.message,
-              data: e.data,
-            }
-          } else {
-            const details = this._exceptionDetailsProvider(e)
-            if (details !== undefined) {
-              error = {
-                ...Errors.serverError,
-                data: details,
-              }
-            } else {
-              error = Errors.serverError
-            }
-          }
-          this.sendError(error, requestId)
-        },
+        () =>
+          this._tracer.incomeRequest.start(
+            {
+              peer: this,
+              request: {
+                id: requestId,
+                method: method,
+                params: request,
+              },
+            },
+            () =>
+              runPromiseOrValue(
+                () => handler(request, requestId, method),
+                (response) => {
+                  if (response === undefined) {
+                    return
+                  }
+                  this.sendResponse({
+                    id: requestId,
+                    result: response,
+                  })
+                },
+                (e) => {
+                  let error: rpc.Error
+                  if (isRpcError(e)) {
+                    error = {
+                      code: e.code,
+                      message: e.message,
+                      data: e.data,
+                    }
+                  } else {
+                    const details = this._exceptionDetailsProvider(e)
+                    if (details !== undefined) {
+                      error = {
+                        ...Errors.serverError,
+                        data: details,
+                      }
+                    } else {
+                      error = Errors.serverError
+                    }
+                  }
+                  this.sendError(error, requestId)
+                },
+              ),
+          ),
+        noop,
+        noop,
       )
     }
     this._requestHandlers.set(method, internalHandler)
@@ -560,12 +577,20 @@ export class Peer implements IDisposable {
    * @internal
    */
   private _handleNotification(notification: rpc.Notification) {
-    const dispatcher = this._onNotification.get(notification.method)
-    if (!dispatcher) {
-      this._logger.debug("Unhandled notification", notification.method)
-      return
-    }
-    dispatcher.dispatch(notification.params)
+    this._tracer.incomeNotification.start(
+      {
+        peer: this,
+        notification: notification,
+      },
+      () => {
+        const dispatcher = this._onNotification.get(notification.method)
+        if (!dispatcher) {
+          this._logger.debug("Unhandled notification", notification.method)
+          return
+        }
+        dispatcher.dispatch(notification.params)
+      },
+    )
   }
 
   /**

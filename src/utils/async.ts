@@ -30,3 +30,31 @@ export function handlePromiseOrValueFunction<T>(
     callback(result)
   }
 }
+
+export function runPromiseOrValue<T>(
+  action: () => T,
+  callback: (value: Awaited<T>) => void,
+  errorCallback: (e: unknown) => void,
+): T {
+  let result: T
+  try {
+    result = action()
+  } catch (e) {
+    errorCallback(e)
+    throw e
+  }
+  if (!(result instanceof Promise)) {
+    callback(result as Awaited<T>)
+    return result
+  }
+  return result.then(
+    (r) => {
+      callback(r)
+      return r
+    },
+    (e) => {
+      errorCallback(e)
+      throw e
+    },
+  ) as T
+}

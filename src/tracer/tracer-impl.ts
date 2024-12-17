@@ -1,6 +1,8 @@
 import { type EventObserver, EventSafeDispatcher } from "@tioniq/eventiq"
 import type {
   EventTracer,
+  IncomeNotificationEvent,
+  IncomeRequestEvent,
   OutcomeErrorEvent,
   OutcomeNotificationEvent,
   OutcomeRequestEvent,
@@ -19,6 +21,10 @@ export class TracerImpl implements Tracer {
     this.outcomeResponse = new EventTracerImpl<OutcomeResponseEvent>(
       timeProvider,
     )
+    this.incomeRequest = new EventTracerImpl<IncomeRequestEvent>(timeProvider)
+    this.incomeNotification = new EventTracerImpl<IncomeNotificationEvent>(
+      timeProvider,
+    )
   }
 
   readonly outcomeRequest: EventTracerImpl<OutcomeRequestEvent>
@@ -28,6 +34,10 @@ export class TracerImpl implements Tracer {
   readonly outcomeError: EventTracerImpl<OutcomeErrorEvent>
 
   readonly outcomeResponse: EventTracerImpl<OutcomeResponseEvent>
+
+  readonly incomeRequest: EventTracerImpl<IncomeRequestEvent>
+
+  readonly incomeNotification: EventTracerImpl<IncomeNotificationEvent>
 }
 
 class EventTracerImpl<T> implements EventTracer<T> {

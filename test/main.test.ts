@@ -9,11 +9,12 @@
 import { EventDispatcher, type EventObserver } from "@tioniq/eventiq"
 import { ObjectDisposedException } from "@tioniq/disposiq"
 
-describe("peer", () => {beforeEach(() => {
-  jest.useFakeTimers({
-    advanceTimers: true,
+describe("peer", () => {
+  beforeEach(() => {
+    jest.useFakeTimers({
+      advanceTimers: true,
+    })
   })
-})
   afterEach(() => {
     jest.useRealTimers()
   })

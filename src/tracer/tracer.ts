@@ -10,6 +10,10 @@ export interface Tracer {
   get outcomeError(): EventTracer<OutcomeErrorEvent>
 
   get outcomeResponse(): EventTracer<OutcomeResponseEvent>
+
+  get incomeRequest(): EventTracer<IncomeRequestEvent>
+
+  get incomeNotification(): EventTracer<IncomeNotificationEvent>
 }
 
 export interface EventTracer<T> {
@@ -48,4 +52,14 @@ export interface OutcomeErrorEvent {
 export interface OutcomeResponseEvent {
   readonly peer: Peer
   readonly response: rpc.Response
+}
+
+export interface IncomeRequestEvent {
+  readonly peer: Peer
+  readonly request: rpc.Request
+}
+
+export interface IncomeNotificationEvent {
+  readonly peer: Peer
+  readonly notification: rpc.Notification
 }
