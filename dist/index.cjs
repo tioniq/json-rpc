@@ -199,7 +199,6 @@ function defaultTimeProvider() {
 
 // src/tracer/tracer-impl.ts
 var import_eventiq = require("@tioniq/eventiq");
-var import_types = require("util/types");
 var TracerImpl = class {
   constructor(timeProvider) {
     __publicField(this, "outcomeRequest");
@@ -244,7 +243,7 @@ var EventTracerImpl = class {
       this._onEnd.dispatch(eventData);
       throw e;
     }
-    if (!(0, import_types.isPromise)(result)) {
+    if (!(result instanceof Promise)) {
       eventData.endTime = this._timeProvider();
       eventData.result = result;
       this._onEnd.dispatch(eventData);
