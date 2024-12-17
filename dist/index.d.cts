@@ -129,6 +129,8 @@ interface Tracer {
     get outcomeNotification(): EventTracer<OutcomeNotificationEvent>;
     get outcomeError(): EventTracer<OutcomeErrorEvent>;
     get outcomeResponse(): EventTracer<OutcomeResponseEvent>;
+    get incomeRequest(): EventTracer<IncomeRequestEvent>;
+    get incomeNotification(): EventTracer<IncomeNotificationEvent>;
 }
 interface EventTracer<T> {
     get onStart(): EventObserver<T & EventStartData>;
@@ -159,6 +161,14 @@ interface OutcomeErrorEvent {
 interface OutcomeResponseEvent {
     readonly peer: Peer;
     readonly response: Response;
+}
+interface IncomeRequestEvent {
+    readonly peer: Peer;
+    readonly request: Request;
+}
+interface IncomeNotificationEvent {
+    readonly peer: Peer;
+    readonly notification: Notification;
 }
 
 type TimeProvider = () => number;

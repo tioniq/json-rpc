@@ -159,6 +159,29 @@ function handlePromiseOrValueFunction(func, callback, errorCallback) {
     callback(result);
   }
 }
+function runPromiseOrValue(action, callback, errorCallback) {
+  let result;
+  try {
+    result = action();
+  } catch (e) {
+    errorCallback(e);
+    throw e;
+  }
+  if (!(result instanceof Promise)) {
+    callback(result);
+    return result;
+  }
+  return result.then(
+    (r) => {
+      callback(r);
+      return r;
+    },
+    (e) => {
+      errorCallback(e);
+      throw e;
+    }
+  );
+}
 
 // src/time/default-time-provider.ts
 function defaultTimeProvider() {
@@ -173,12 +196,18 @@ var TracerImpl = class {
     __publicField(this, "outcomeNotification");
     __publicField(this, "outcomeError");
     __publicField(this, "outcomeResponse");
+    __publicField(this, "incomeRequest");
+    __publicField(this, "incomeNotification");
     this.outcomeRequest = new EventTracerImpl(timeProvider);
     this.outcomeNotification = new EventTracerImpl(
       timeProvider
     );
     this.outcomeError = new EventTracerImpl(timeProvider);
     this.outcomeResponse = new EventTracerImpl(
+      timeProvider
+    );
+    this.incomeRequest = new EventTracerImpl(timeProvider);
+    this.incomeNotification = new EventTracerImpl(
       timeProvider
     );
   }
@@ -770,24 +799,24 @@ var Peer = class {
   sendResponse(response) {
     this._disposables.throwIfDisposed();
     this._checkConnection();
-    this._tracer.outcomeResponse.start(
-      {
-        peer: this,
-        response
-      },
-      () => handlePromiseOrValueFunction(
+    handlePromiseOrValueFunction(
+      () => this._tracer.outcomeResponse.start(
+        {
+          peer: this,
+          response
+        },
         () => this._sendMessage({
           id: response.id,
           result: response.result
-        }),
-        noop,
-        (e) => {
-          this._logger.error("Failed to send response", {
-            response,
-            error: e
-          });
-        }
-      )
+        })
+      ),
+      noop,
+      (e) => {
+        this._logger.error("Failed to send response", {
+          response,
+          error: e
+        });
+      }
     );
   }
   /**
@@ -813,37 +842,51 @@ var Peer = class {
   setRequestHandler(method, handler) {
     const internalHandler = (request, requestId, method2) => {
       handlePromiseOrValueFunction(
-        () => handler(request, requestId, method2),
-        (response) => {
-          if (response === void 0) {
-            return;
-          }
-          this.sendResponse({
-            id: requestId,
-            result: response
-          });
-        },
-        (e) => {
-          let error;
-          if (isRpcError2(e)) {
-            error = {
-              code: e.code,
-              message: e.message,
-              data: e.data
-            };
-          } else {
-            const details = this._exceptionDetailsProvider(e);
-            if (details !== void 0) {
-              error = {
-                ...Errors.serverError,
-                data: details
-              };
-            } else {
-              error = Errors.serverError;
+        () => this._tracer.incomeRequest.start(
+          {
+            peer: this,
+            request: {
+              id: requestId,
+              method: method2,
+              params: request
             }
-          }
-          this.sendError(error, requestId);
-        }
+          },
+          () => runPromiseOrValue(
+            () => handler(request, requestId, method2),
+            (response) => {
+              if (response === void 0) {
+                return;
+              }
+              this.sendResponse({
+                id: requestId,
+                result: response
+              });
+            },
+            (e) => {
+              let error;
+              if (isRpcError2(e)) {
+                error = {
+                  code: e.code,
+                  message: e.message,
+                  data: e.data
+                };
+              } else {
+                const details = this._exceptionDetailsProvider(e);
+                if (details !== void 0) {
+                  error = {
+                    ...Errors.serverError,
+                    data: details
+                  };
+                } else {
+                  error = Errors.serverError;
+                }
+              }
+              this.sendError(error, requestId);
+            }
+          )
+        ),
+        noop,
+        noop
       );
     };
     this._requestHandlers.set(method, internalHandler);
@@ -885,12 +928,20 @@ var Peer = class {
    * @internal
    */
   _handleNotification(notification) {
-    const dispatcher = this._onNotification.get(notification.method);
-    if (!dispatcher) {
-      this._logger.debug("Unhandled notification", notification.method);
-      return;
-    }
-    dispatcher.dispatch(notification.params);
+    this._tracer.incomeNotification.start(
+      {
+        peer: this,
+        notification
+      },
+      () => {
+        const dispatcher = this._onNotification.get(notification.method);
+        if (!dispatcher) {
+          this._logger.debug("Unhandled notification", notification.method);
+          return;
+        }
+        dispatcher.dispatch(notification.params);
+      }
+    );
   }
   /**
    * @internal
