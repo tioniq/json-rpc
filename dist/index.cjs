@@ -20,8 +20,8 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
 // src/index.ts
-var src_exports = {};
-__export(src_exports, {
+var index_exports = {};
+__export(index_exports, {
   ConnectionClosedException: () => ConnectionClosedException,
   Errors: () => Errors,
   INTERNAL_ERROR: () => INTERNAL_ERROR,
@@ -35,7 +35,7 @@ __export(src_exports, {
   errorName: () => errorName,
   isRpcError: () => isRpcError2
 });
-module.exports = __toCommonJS(src_exports);
+module.exports = __toCommonJS(index_exports);
 
 // src/json-rpc.ts
 var import_eventiq3 = require("@tioniq/eventiq");
@@ -45,8 +45,8 @@ var import_disposiq2 = require("@tioniq/disposiq");
 var Completer = class {
   constructor(executor) {
     __publicField(this, "promise");
-    __publicField(this, "resolve", null);
-    __publicField(this, "reject", null);
+    __publicField(this, "resolve");
+    __publicField(this, "reject");
     __publicField(this, "completed", false);
     this.promise = new Promise((resolve, reject) => {
       this.resolve = resolve;

@@ -13,8 +13,8 @@ import {
 var Completer = class {
   constructor(executor) {
     __publicField(this, "promise");
-    __publicField(this, "resolve", null);
-    __publicField(this, "reject", null);
+    __publicField(this, "resolve");
+    __publicField(this, "reject");
     __publicField(this, "completed", false);
     this.promise = new Promise((resolve, reject) => {
       this.resolve = resolve;

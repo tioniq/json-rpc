@@ -1,7 +1,7 @@
 export class Completer<T> {
   public readonly promise: Promise<T>
-  private resolve: (value: T | PromiseLike<T>) => void = null!
-  private reject: (reason?: any) => void = null!
+  private resolve!: (value: T | PromiseLike<T>) => void
+  private reject!: (reason?: unknown) => void
   private completed = false
 
   constructor(executor?: (() => void) | undefined) {
@@ -22,7 +22,7 @@ export class Completer<T> {
     this.resolve(value)
   }
 
-  public completeError(error: any) {
+  public completeError(error: unknown) {
     if (this.completed) {
       return
     }
