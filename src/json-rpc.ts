@@ -705,7 +705,7 @@ export type JsonRpcMessage =
   | JsonRpcNotificationMessage
 
 export function isRpcError(e: unknown): e is rpc.Error {
-  return typeof e === "object" && e !== null && "code" in e && "message" in e
+  return typeof e === 'object' && e !== null && 'code' in e && 'message' in e && typeof e.code === 'number' && typeof e.message === 'string'
 }
 
 function noop() {}
