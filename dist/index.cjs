@@ -1055,7 +1055,7 @@ var Peer = class {
   }
 };
 function isRpcError2(e) {
-  return typeof e === "object" && e !== null && "code" in e && "message" in e;
+  return typeof e === "object" && e !== null && "code" in e && "message" in e && typeof e.code === "number" && typeof e.message === "string";
 }
 function noop() {
 }
